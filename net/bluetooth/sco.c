@@ -285,7 +285,7 @@ static int sco_send_frame(struct sock *sk, struct msghdr *msg, int len)
 	if (!skb)
 		return err;
 
-	if (memcpy_from_msg(skb_put(skb, len), msg, len)) {
+	if (memcpy_fromiovec(skb_put(skb, len), msg->msg_iov, len)) {
 		kfree_skb(skb);
 		return -EFAULT;
 	}
@@ -321,9 +321,10 @@ drop:
 /* -------- Socket interface ---------- */
 static struct sock *__sco_get_sock_listen_by_addr(bdaddr_t *ba)
 {
+	struct hlist_node *node;
 	struct sock *sk;
 
-	sk_for_each(sk, &sco_sk_list.head) {
+	sk_for_each(sk, node, &sco_sk_list.head) {
 		if (sk->sk_state != BT_LISTEN)
 			continue;
 
@@ -340,10 +341,11 @@ static struct sock *__sco_get_sock_listen_by_addr(bdaddr_t *ba)
 static struct sock *sco_get_sock_listen(bdaddr_t *src)
 {
 	struct sock *sk = NULL, *sk1 = NULL;
+	struct hlist_node *node;
 
 	read_lock(&sco_sk_list.lock);
 
-	sk_for_each(sk, &sco_sk_list.head) {
+	sk_for_each(sk, node, &sco_sk_list.head) {
 		if (sk->sk_state != BT_LISTEN)
 			continue;
 
@@ -358,7 +360,7 @@ static struct sock *sco_get_sock_listen(bdaddr_t *src)
 
 	read_unlock(&sco_sk_list.lock);
 
-	return sk ? sk : sk1;
+	return node ? sk : sk1;
 }
 
 static void sco_sock_destruct(struct sock *sk)
@@ -1049,7 +1051,7 @@ static void sco_conn_ready(struct sco_conn *conn)
 			sk->sk_state = BT_CONNECTED;
 
 		/* Wake up parent */
-		parent->sk_data_ready(parent);
+		parent->sk_data_ready(parent, 1);
 
 		bh_unlock_sock(parent);
 
@@ -1061,13 +1063,14 @@ static void sco_conn_ready(struct sco_conn *conn)
 int sco_connect_ind(struct hci_dev *hdev, bdaddr_t *bdaddr, __u8 *flags)
 {
 	struct sock *sk;
+	struct hlist_node *node;
 	int lm = 0;
 
 	BT_DBG("hdev %s, bdaddr %pMR", hdev->name, bdaddr);
 
 	/* Find listening sockets */
 	read_lock(&sco_sk_list.lock);
-	sk_for_each(sk, &sco_sk_list.head) {
+	sk_for_each(sk, node, &sco_sk_list.head) {
 		if (sk->sk_state != BT_LISTEN)
 			continue;
 
@@ -1127,10 +1130,11 @@ drop:
 static int sco_debugfs_show(struct seq_file *f, void *p)
 {
 	struct sock *sk;
+	struct hlist_node *node;
 
 	read_lock(&sco_sk_list.lock);
 
-	sk_for_each(sk, &sco_sk_list.head) {
+	sk_for_each(sk, node, &sco_sk_list.head) {
 		seq_printf(f, "%pMR %pMR %d\n", &sco_pi(sk)->src,
 			   &sco_pi(sk)->dst, sk->sk_state);
 	}

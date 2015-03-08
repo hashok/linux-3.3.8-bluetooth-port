@@ -104,7 +104,6 @@ static inline int arch_get_random_int(unsigned int *v)
 }
 #endif
 
-u32 prandom_u32_state(struct rnd_state *state);
 u32 prandom_u32(void);
 
 /**
