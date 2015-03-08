@@ -2674,6 +2674,6 @@ static inline void inode_has_no_xattr(struct inode *inode)
 	if (!is_sxid(inode->i_mode) && (inode->i_sb->s_flags & MS_NOSEC))
 		inode->i_flags |= S_NOSEC;
 }
-
+extern int simple_open(struct inode *inode, struct file *file);
 #endif /* __KERNEL__ */
 #endif /* _LINUX_FS_H */

@@ -1,8 +1,7 @@
 /*
    BlueZ - Bluetooth protocol stack for Linux
-   Copyright (C) 2000-2001 Qualcomm Incorporated
 
-   Written 2000,2001 by Maxim Krasnyansky <maxk@qualcomm.com>
+   Copyright (C) 2011-2012  Intel Corporation
 
    This program is free software; you can redistribute it and/or modify
    it under the terms of the GNU General Public License version 2 as
@@ -22,28 +21,31 @@
    SOFTWARE IS DISCLAIMED.
 */
 
-#ifndef __SCO_H
-#define __SCO_H
+#ifndef __HCI_MON_H
+#define __HCI_MON_H
 
-/* SCO defaults */
-#define SCO_DEFAULT_MTU		500
+struct hci_mon_hdr {
+	__le16	opcode;
+	__le16	index;
+	__le16	len;
+} __packed;
+#define HCI_MON_HDR_SIZE 6
 
-/* SCO socket address */
-struct sockaddr_sco {
-	sa_family_t	sco_family;
-	bdaddr_t	sco_bdaddr;
-};
+#define HCI_MON_NEW_INDEX	0
+#define HCI_MON_DEL_INDEX	1
+#define HCI_MON_COMMAND_PKT	2
+#define HCI_MON_EVENT_PKT	3
+#define HCI_MON_ACL_TX_PKT	4
+#define HCI_MON_ACL_RX_PKT	5
+#define HCI_MON_SCO_TX_PKT	6
+#define HCI_MON_SCO_RX_PKT	7
 
-/* SCO socket options */
-#define SCO_OPTIONS	0x01
-struct sco_options {
-	__u16 mtu;
-};
+struct hci_mon_new_index {
+	__u8		type;
+	__u8		bus;
+	bdaddr_t	bdaddr;
+	char		name[8];
+} __packed;
+#define HCI_MON_NEW_INDEX_SIZE 16
 
-#define SCO_CONNINFO	0x02
-struct sco_conninfo {
-	__u16 hci_handle;
-	__u8  dev_class[3];
-};
-
-#endif /* __SCO_H */
+#endif /* __HCI_MON_H */

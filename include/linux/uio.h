@@ -53,4 +53,6 @@ static inline size_t iov_length(const struct iovec *iov, unsigned long nr_segs)
 unsigned long iov_shorten(struct iovec *iov, unsigned long nr_segs, size_t to);
 #endif
 
+int memcpy_fromiovec(unsigned char *kdata, struct iovec *iov, int len);
+
 #endif

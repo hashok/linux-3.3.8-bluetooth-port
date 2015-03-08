@@ -145,4 +145,9 @@ int proc_setattr(struct dentry *dentry, struct iattr *attr);
 
 extern const struct inode_operations proc_ns_dir_inode_operations;
 extern const struct file_operations proc_ns_dir_operations;
+static inline void *__PDE_DATA(const struct inode *inode)
+{
+	return PDE(inode)->data;
+}
+
 

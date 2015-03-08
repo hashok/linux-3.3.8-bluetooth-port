@@ -174,6 +174,7 @@ extern struct proc_dir_entry *proc_net_mkdir(struct net *net, const char *name,
 	struct proc_dir_entry *parent);
 
 extern struct file *proc_ns_fget(int fd);
+extern void *PDE_DATA(const struct inode *);
 
 #else
 
