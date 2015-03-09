@@ -103,11 +103,11 @@ static struct rfcomm_session *rfcomm_session_del(struct rfcomm_session *s);
 #define __get_rpn_stop_bits(line) (((line) >> 2) & 0x1)
 #define __get_rpn_parity(line)    (((line) >> 3) & 0x7)
 
-static DECLARE_WAIT_QUEUE_HEAD(rfcomm_wq);
-
 static void rfcomm_schedule(void)
 {
-	wake_up_all(&rfcomm_wq);
+    if (!rfcomm_thread)
+        return;
+    wake_up_process(rfcomm_thread);
 }
 
 /* ---- RFCOMM FCS computation ---- */
@@ -2088,22 +2088,24 @@ static void rfcomm_kill_listener(void)
 
 static int rfcomm_run(void *unused)
 {
-	DEFINE_WAIT_FUNC(wait, woken_wake_function);
 	BT_DBG("");
 
 	set_user_nice(current, -10);
 
 	rfcomm_add_listener(BDADDR_ANY);
 
-	add_wait_queue(&rfcomm_wq, &wait);
-	while (!kthread_should_stop()) {
+	while (1) {
+	    set_current_state(TASK_INTERRUPTIBLE);
+
+	    if (kthread_should_stop())
+	        break;
 
 		/* Process stuff */
 		rfcomm_process_sessions();
 
-		wait_woken(&wait, TASK_INTERRUPTIBLE, MAX_SCHEDULE_TIMEOUT);
+		schedule();
 	}
-	remove_wait_queue(&rfcomm_wq, &wait);
+	__set_current_state(TASK_RUNNING);
 
 	rfcomm_kill_listener();
 
